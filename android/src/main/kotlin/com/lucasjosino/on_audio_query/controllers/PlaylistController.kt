@@ -87,46 +87,49 @@ class PlaylistController {
 
     //TODO Add option to use a list
     fun removeFromPlaylist() {
-    this.resolver = context.contentResolver
-    val playlistId = call.argument<Int>("playlistId")!!
-    val audioId = call.argument<Int>("audioId")!!
+        this.resolver = context.contentResolver
+        val playlistId = call.argument<Int>("playlistId")!!
+        val audioId = call.argument<Int>("audioId")!!
 
-    if (!checkPlaylistId(playlistId)) {
-        result.success(false)
-        return
-    }
+        if (!checkPlaylistId(playlistId)) {
+            Log.i("on_audio_error", "Playlist ID does not exist: $playlistId")
+            result.success(false)
+            return
+        }
 
-    try {
-        val uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId.toLong())
-        val cursor = resolver.query(
-            uri,
-            arrayOf(MediaStore.Audio.Playlists.Members._ID),
-            "${MediaStore.Audio.Playlists.Members.AUDIO_ID}=?",
-            arrayOf(audioId.toString()),
-            null
-        )
-
-        if (cursor != null && cursor.moveToFirst()) {
-            val itemId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members._ID))
-            cursor.close()
-
-            val deleteUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId.toLong())
-            val deleted = resolver.delete(
-                deleteUri,
-                "${MediaStore.Audio.Playlists.Members._ID}=?",
-                arrayOf(itemId.toString())
+        try {
+            val uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId.toLong())
+            val cursor = resolver.query(
+                uri,
+                arrayOf(MediaStore.Audio.Playlists.Members._ID),
+                "${MediaStore.Audio.Playlists.Members.AUDIO_ID}=?",
+                arrayOf(audioId.toString()),
+                null
             )
 
-            result.success(deleted > 0)
-        } else {
-            cursor?.close()
+            if (cursor != null && cursor.moveToFirst()) {
+                val itemId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members._ID))
+                cursor.close()
+
+                val deleteUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId.toLong())
+                val deleted = resolver.delete(
+                    deleteUri,
+                    "${MediaStore.Audio.Playlists.Members._ID}=?",
+                    arrayOf(itemId.toString())
+                )
+
+                Log.i("on_audio_info", "Deleted $deleted items")
+                result.success(deleted > 0)
+            } else {
+                cursor?.close()
+                Log.i("on_audio_error", "No matching audio ID found in playlist: $audioId")
+                result.success(false)
+            }
+        } catch (e: Exception) {
+            Log.i("on_audio_error", e.toString())
             result.success(false)
         }
-    } catch (e: Exception) {
-        Log.i("on_audio_error", e.toString())
-        result.success(false)
     }
-}
 
 
 
