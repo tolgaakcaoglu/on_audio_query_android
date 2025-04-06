@@ -91,43 +91,21 @@ class PlaylistController {
         val playlistId = call.argument<Int>("playlistId")!!
         val audioId = call.argument<Int>("audioId")!!
 
-        if (!checkPlaylistId(playlistId)) {
-            Log.i("on_audio_error", "Playlist ID does not exist: $playlistId")
-            result.success(false)
-            return
-        }
-
-        try {
-            val uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId.toLong())
-            val cursor = resolver.query(
-                uri,
-                arrayOf(MediaStore.Audio.Playlists.Members._ID),
-                "${MediaStore.Audio.Playlists.Members.AUDIO_ID}=?",
-                arrayOf(audioId.toString()),
-                null
-            )
-
-            if (cursor != null && cursor.moveToFirst()) {
-                val itemId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members._ID))
-                cursor.close()
-
-                val deleteUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId.toLong())
-                val deleted = resolver.delete(
-                    deleteUri,
-                    "${MediaStore.Audio.Playlists.Members._ID}=?",
-                    arrayOf(itemId.toString())
+        //Check if Playlist exists based on Id
+        if (!checkPlaylistId(playlistId)) result.success(false)
+        else {
+            try {
+                val uri = MediaStore.Audio.Playlists.Members.getContentUri(
+                    "external",
+                    playlistId.toLong()
                 )
-
-                Log.i("on_audio_info", "Deleted $deleted items")
-                result.success(deleted > 0)
-            } else {
-                cursor?.close()
-                Log.i("on_audio_error", "No matching audio ID found in playlist: $audioId")
+                val where = MediaStore.Audio.Playlists.Members._ID + "=?"
+                resolver.delete(uri, where, arrayOf(audioId.toString()))
+                result.success(true)
+            } catch (e: Exception) {
+                Log.i("on_audio_error: ", e.toString())
                 result.success(false)
             }
-        } catch (e: Exception) {
-            Log.i("on_audio_error", e.toString())
-            result.success(false)
         }
     }
 
