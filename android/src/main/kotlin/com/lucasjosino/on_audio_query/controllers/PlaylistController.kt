@@ -90,7 +90,7 @@ class PlaylistController {
         this.resolver = context.contentResolver
         val playlistId = call.argument<Int>("playlistId")!!
         val audioId = call.argument<Int>("audioId")!!
-
+    
         //Check if Playlist exists based on Id
         if (!checkPlaylistId(playlistId)) result.success(false)
         else {
@@ -99,8 +99,6 @@ class PlaylistController {
                     "external",
                     playlistId.toLong()
                 ) 
-                // val where = MediaStore.Audio.Playlists.Members._ID + "=?"
-                // resolver.delete(uri, where, arrayOf(audioId.toString()))
                 val cursor = resolver.query(
                     uri,
                     arrayOf(MediaStore.Audio.Playlists.Members._ID),
@@ -108,13 +106,38 @@ class PlaylistController {
                     arrayOf(audioId.toString()),
                     null
                 )
-                result.success(true)
+    
+                if (cursor != null && cursor.moveToFirst()) {
+                    val itemId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members._ID))
+                    cursor.close()
+    
+                    // Delete the item using the itemId
+                    val deleteUri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId.toLong())
+                    val deleted = resolver.delete(
+                        deleteUri,
+                        "${MediaStore.Audio.Playlists.Members._ID}=?",
+                        arrayOf(itemId.toString())
+                    )
+    
+                    if (deleted > 0) {
+                        Log.i("on_audio_info", "Successfully deleted $deleted item(s)")
+                        result.success(true)
+                    } else {
+                        Log.i("on_audio_error", "Failed to delete item from playlist")
+                        result.success(false)
+                    }
+                } else {
+                    cursor?.close()
+                    Log.i("on_audio_error", "No matching audio ID found in playlist: $audioId")
+                    result.success(false)
+                }
             } catch (e: Exception) {
                 Log.i("on_audio_error: ", e.toString())
                 result.success(false)
             }
         }
     }
+
 
 
 
