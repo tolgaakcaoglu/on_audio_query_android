@@ -98,9 +98,16 @@ class PlaylistController {
                 val uri = MediaStore.Audio.Playlists.Members.getContentUri(
                     "external",
                     playlistId.toLong()
+                ) 
+                // val where = MediaStore.Audio.Playlists.Members._ID + "=?"
+                // resolver.delete(uri, where, arrayOf(audioId.toString()))
+                val cursor = resolver.query(
+                    uri,
+                    arrayOf(MediaStore.Audio.Playlists.Members._ID),
+                    "${MediaStore.Audio.Playlists.Members.AUDIO_ID}=?",
+                    arrayOf(audioId.toString()),
+                    null
                 )
-                val where = MediaStore.Audio.Playlists.Members._ID + "=?"
-                resolver.delete(uri, where, arrayOf(audioId.toString()))
                 result.success(true)
             } catch (e: Exception) {
                 Log.i("on_audio_error: ", e.toString())
