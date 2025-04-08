@@ -77,10 +77,14 @@ class PlaylistController {
             try {
                 contentValues.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, count + 1)
                 contentValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, audioId.toLong())
-                resolver.insert(uri, contentValues)
-                result.success(true)
+                val insertedUri = resolver.insert(uri, contentValues)
+                result.success(insertedUri != null)
+            } catch (se: SecurityException) {
+                Log.e(channelError, "SecurityException: ${se.message}")
+                result.error("PERMISSION_ERROR", "SecurityException: ${se.message}", null)
             } catch (e: Exception) {
-                Log.i(channelError, e.toString())
+                Log.e(channelError, "Error adding to playlist: ${e.message}")
+                result.success(false)
             }
         }
     }
