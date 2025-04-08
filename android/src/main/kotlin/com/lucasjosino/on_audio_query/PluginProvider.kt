@@ -50,7 +50,7 @@ object PluginProvider {
      */
     fun setCurrentMethod(call: MethodCall, result: MethodChannel.Result) {
         this.call = WeakReference(call)
-        this.result = WeakReference(result)
+        this.result = result
     }
 
     /**
@@ -90,7 +90,7 @@ object PluginProvider {
      * @return [MethodChannel.Result]
      */
     fun result(): MethodChannel.Result {
-        return this.result.get() ?: throw UninitializedPluginProviderException(ERROR_MESSAGE)
+        return this.result
     }
 
     class UninitializedPluginProviderException(msg: String) : Exception(msg)
