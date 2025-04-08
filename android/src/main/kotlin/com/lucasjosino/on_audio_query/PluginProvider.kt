@@ -31,7 +31,7 @@ object PluginProvider {
 
     private lateinit var call: WeakReference<MethodCall>
 
-    private lateinit var result: WeakReference<MethodChannel.Result>
+    private lateinit var result: MethodChannel.Result
 
     /**
      * Used to define the current [Activity] and [Context].
@@ -50,7 +50,7 @@ object PluginProvider {
      */
     fun setCurrentMethod(call: MethodCall, result: MethodChannel.Result) {
         this.call = WeakReference(call)
-        this.result = result
+        this.result = result // ✅ Direkt referans
     }
 
     /**
